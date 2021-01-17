@@ -3,7 +3,7 @@
 class CrashCatchException extends Exception
 {
     /**
-     * CritiMonException constructor.
+     * CrashCatchException constructor.
      * @param string $message
      * @param int $http_code
      */
