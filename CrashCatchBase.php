@@ -1,12 +1,13 @@
 <?php
 
-define("crashcatch_url", "https://engine.crashcatch.com");
+//define("crashcatch_url", "https://engine.crashcatch.com");
+define("crashcatch_url", "http://192.168.1.47:5000/api");
 
 class CrashCatchBase
 {
     protected $project_id;
     protected $api_key;
-    protected $app_version;
+    protected $project_version;
     protected $device_id;
     protected $cookies;
     protected $initialised = false;
@@ -21,7 +22,7 @@ class CrashCatchBase
     {
         $this->project_id = $project_id;
         $this->api_key = $api_key;
-        $this->app_version = $version_number;
+        $this->project_version = $version_number;
     }
 
     /**
@@ -37,7 +38,7 @@ class CrashCatchBase
 
         $headers = array();
         $headers[] = "authorisation-token: " . $this->api_key;
-        $headers[] = "content-type: application/x-www-form-urlencoded";
+        $headers[] = "content-type: application/json";
         $headers[] = "user-agent: CrashCatch PHP Library";
         if (($this->cookies !== null) && count($this->cookies) > 0)
         {
@@ -69,7 +70,7 @@ class CrashCatchBase
             CURLOPT_HEADER => 1,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => $this->urlEncodePostArray($postFields),
+            CURLOPT_POSTFIELDS => json_encode($postFields),
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_HTTPHEADER => $headers

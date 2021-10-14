@@ -42,7 +42,7 @@ class CrashCatch extends CrashCatchBase
                     $this->cookies[$key] = $value;
                 }
             }
-            $curl = $this->returnCurlClient(array("ProjectID" => $this->project_id, "DeviceID" => $this->device_id, "AppVersion" => $this->app_version), "initialise");
+            $curl = $this->returnCurlClient(array("ProjectID" => $this->project_id, "DeviceID" => $this->device_id, "ProjectVersion" => $this->project_version), "initialise");
 
             $response = curl_exec($curl);
             $err = curl_error($curl);
@@ -126,9 +126,9 @@ class CrashCatch extends CrashCatchBase
             $postFields["Stacktrace"] = $error["message"];
             $postFields["ExceptionMessage"] = "N/A";
             $postFields["PHPFile"] = $error["file"];
-            $postFields["LineNo"] = $error["line"];
+            $postFields["LineNo"] = strval($error["line"]);
             $postFields["Exception"] = $error["message"];
-            $postFields["ErrorCode"] = -1;
+            $postFields["ErrorCode"] = "-1";
             $postFields["PHPVersion"] = phpversion();
             $postFields["Platform"] = PHP_OS;
             $postFields["Uname"] = php_uname("s") . " " . php_uname("r") . " " . php_uname("v") . " " . php_uname("m");
@@ -220,11 +220,11 @@ class CrashCatch extends CrashCatchBase
             }
             if (isset($backtrace[0]["line"]))
             {
-                $postFields["LineNo"] = $backtrace[0]["line"];
+                $postFields["LineNo"] = strval($backtrace[0]["line"]);
             }
             else
             {
-                $postFields["LineNo"] = 0;
+                $postFields["LineNo"] = "0";
             }
             $postFields["Exception"] = $args[1];
             $postFields["ErrorCode"] = $phpErrorType;
@@ -257,15 +257,15 @@ class CrashCatch extends CrashCatchBase
         $postFields["ExceptionMessage"] = $exception->getMessage();
         $postFields["Stacktrace"] = $exception->getTraceAsString();
         $postFields["PHPFile"] = $exception->getFile();
-        $postFields["LineNo"] = $exception->getLine();
+        $postFields["LineNo"] = strval($exception->getLine());
         $postFields["Exception"] = $exception->getMessage();
-        $postFields["ErrorCode"] = $exception->getCode();
+        $postFields["ErrorCode"] = strval($exception->getCode());
         $postFields["PHPVersion"] = phpversion();
         $postFields["Platform"] = PHP_OS;
         $postFields["Uname"] = php_uname("s") . " " . php_uname("r") . " " . php_uname("v") . " " . php_uname("m");
         $postFields["Severity"] = $severity;
         $postFields["CustomProperty"] = $customProperties;
-        $this->sendCrashData($postFields);
+        return $this->sendCrashData($postFields);
     }
 
     /**
@@ -284,7 +284,7 @@ class CrashCatch extends CrashCatchBase
         {
             $postFields["ProjectID"] = $this->project_id;
             $postFields["DeviceID"] = $this->device_id;
-            $postFields["VersionName"] = $this->app_version;
+            $postFields["VersionName"] = $this->project_version;
             $postFields["DeviceType"] = "PHP";
             $postFields["Locale"] = Locale::getDefault();
 
@@ -319,6 +319,7 @@ class CrashCatch extends CrashCatchBase
                             }
                         }
                     }
+                    return $response;
                 }
                 else
                 {
