@@ -1,7 +1,6 @@
 <?php
 
-//define("crashcatch_url", "https://engine.crashcatch.com");
-define("crashcatch_url", "http://192.168.1.47:5000/api");
+define("crashcatch_url", "https://engine.crashcatch.com/api");
 
 class CrashCatchBase
 {
