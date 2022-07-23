@@ -8,10 +8,13 @@ class CrashCatch extends CrashCatchBase
     public function __construct($project_id, $api_key, $version_number)
     {
         parent::__construct($project_id, $api_key, $version_number);
+        $this->initialise();
     }
 
     public function initialise()
     {
+        set_error_handler(array($this, "ErrorHandler"));
+        register_shutdown_function(array($this, "FatalErrorHandler"));
         $this->cookies = array();
         if (isset($_COOKIE["SESSIONID"]))
         {
@@ -95,8 +98,7 @@ class CrashCatch extends CrashCatchBase
                             setcookie("session_id", trim($keyValueCookie[1]), time() + (60 * 10), crashcatch_url);
                         }
                     }
-                    set_error_handler(array($this, "ErrorHandler"));
-                    register_shutdown_function(array($this, "FatalErrorHandler"));
+
                     $this->initialised = true;
                     $body = substr($response, $header_size);
                     return json_decode($body);
@@ -120,11 +122,14 @@ class CrashCatch extends CrashCatchBase
     {
         $error = error_get_last();
         if ($error !== NULL && in_array($error['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING,E_RECOVERABLE_ERROR))) {
+
+            $exception_msg = trim(substr($error["message"], 0, strpos($error["message"], " in ")));
+
             $postFields = array();
             $postFields["ExceptionType"] = "PHP_FATAL";
             $postFields["CrashType"] = "Unhandled";
             $postFields["Stacktrace"] = $error["message"];
-            $postFields["ExceptionMessage"] = "N/A";
+            $postFields["ExceptionMessage"] = $exception_msg;
             $postFields["PHPFile"] = $error["file"];
             $postFields["LineNo"] = strval($error["line"]);
             $postFields["Exception"] = $error["message"];
@@ -287,6 +292,16 @@ class CrashCatch extends CrashCatchBase
             $postFields["VersionName"] = $this->project_version;
             $postFields["DeviceType"] = "PHP";
             $postFields["Locale"] = Locale::getDefault();
+
+
+            //Remove the leading slash on PHP_SELF as REQUEST_URI has a / as well
+            //so the path would include 2 slashes e.g. // together.
+            $postFields["CustomProperty"][] = [
+                "php_file" => isset($_SERVER["HTTPS"]) ? "https://" : "http://" . $_SERVER["HTTP_HOST"] .
+                    $_SERVER["REQUEST_URI"] . substr($_SERVER["PHP_SELF"], 1)
+            ];
+
+            $postFields["CustomProperty"] = json_encode($postFields["CustomProperty"]);
 
             $curl = $this->returnCurlClient($postFields, "crash");
 
